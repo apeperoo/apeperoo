@@ -1,0 +1,18 @@
+export const FLAME_PATH =
+  'M13 1.2C13.35 5.4 15.05 8.85 16.95 10.7C19.85 8.35 24.05 9.95 23.55 15.55C23.2 19.55 20.45 22.35 18.05 24.15C20.7 25.55 23.15 28.25 13 31.55C2.85 28.25 5.3 25.55 7.95 24.15C5.55 22.35 2.8 19.55 2.45 15.55C1.95 9.95 6.15 8.35 9.05 10.7C10.95 8.85 12.65 5.4 13 1.2ZM13 13.55C14.6 16.25 15.75 18.55 15.5 21.25C14.7 23.45 13 25.25 13 25.25C13 25.25 11.3 23.45 10.5 21.25C10.25 18.55 11.4 16.25 13 13.55Z'
+
+export default function FlameMark({ size = 32, className = '' }) {
+  return (
+    <svg
+      className={className}
+      width={Math.round(size * 0.82)}
+      height={size}
+      viewBox="0 0 26 33"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path fillRule="evenodd" d={FLAME_PATH} />
+    </svg>
+  )
+}

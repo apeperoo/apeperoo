@@ -79,11 +79,16 @@ function FlameConnectLive({ snap, decimals, onDone }) {
   const { ready, authenticated, login, logout, user } = usePrivy()
   const { wallets } = useWallets()
   const address = wallets[0]?.address || user?.wallet?.address
+  const wallet =
+    wallets.find((row) => row.address?.toLowerCase() === String(address || '').toLowerCase()) ||
+    wallets[0]
   const flame = useFlame(address)
   const account = flame.account
-  const required = snap?.required ?? flame.snap.required
-  const expired = Boolean(snap?.expired ?? flame.snap.expired)
-  const round = snap?.round ?? flame.snap.round
+  const required = (snap?.required && snap.required > 0n ? snap.required : flame.snap.required) || 0n
+  const expired = Boolean(
+    (snap?.required && snap.required > 0n ? snap.expired : flame.snap.expired) ?? false,
+  )
+  const round = snap?.round && snap.round > 0n ? snap.round : flame.snap.round
   const [busy, setBusy] = useState('')
   const [note, setNote] = useState('')
 
@@ -124,9 +129,9 @@ function FlameConnectLive({ snap, decimals, onDone }) {
     )
   }
 
-  const canWrite = live.flame && wallets[0]
+  const canWrite = live.flame && wallet
   const canBurn = canWrite && !expired && required > 0n
-  const canFinalize = canWrite && expired
+  const canFinalize = canWrite && expired && flame.snap.endsAt > 0n
   const canClaim = canWrite && account?.claimable > 0n
   const claimId = account?.claimId || (round > 1n ? round - 1n : 0n)
 
@@ -140,13 +145,13 @@ function FlameConnectLive({ snap, decimals, onDone }) {
           onClick={() =>
             run('Burning', async () => {
               await ensureAllowance({
-                wallet: wallets[0],
+                wallet,
                 owner: address,
                 spender: addresses.flame,
                 amount: required,
               })
               await writeFn({
-                wallet: wallets[0],
+                wallet,
                 address: addresses.flame,
                 abi: flameAbi,
                 functionName: 'takeLead',
@@ -158,7 +163,16 @@ function FlameConnectLive({ snap, decimals, onDone }) {
         </Button>
       ) : (
         <Button variant="accent" disabled>
-          {busy || (live.flame ? (expired ? 'Round ended' : 'Burn unavailable') : 'Burn is not live')}
+          {busy ||
+            (!live.flame
+              ? 'Burn is not live'
+              : !wallet
+                ? 'Wallet not ready'
+                : flame.error || required === 0n
+                  ? 'Flame not onchain'
+                  : expired
+                    ? 'Round ended'
+                    : 'Burn unavailable')}
         </Button>
       )}
       {canFinalize && (
@@ -168,7 +182,7 @@ function FlameConnectLive({ snap, decimals, onDone }) {
           onClick={() =>
             run('Finalizing', () =>
               writeFn({
-                wallet: wallets[0],
+                wallet,
                 address: addresses.flame,
                 abi: flameAbi,
                 functionName: 'finalize',
@@ -186,7 +200,7 @@ function FlameConnectLive({ snap, decimals, onDone }) {
           onClick={() =>
             run('Claiming', () =>
               writeFn({
-                wallet: wallets[0],
+                wallet,
                 address: addresses.flame,
                 abi: flameAbi,
                 functionName: 'claim',

@@ -25,6 +25,7 @@ export default function useFlame(userAddress) {
   const token = useTokenMeta()
   const [state, setState] = useState({
     loading: live.flame,
+    error: '',
     snap: emptySnap,
     account: emptyAccount,
     history: [],
@@ -118,12 +119,13 @@ export default function useFlame(userAddress) {
 
       setState({
         loading: false,
+        error: '',
         snap: { round, endsAt, required, currentLeader, prize, upcoming, burned, expired },
         account,
         history,
       })
     } catch {
-      setState((prev) => ({ ...prev, loading: false }))
+      setState((prev) => ({ ...prev, loading: false, error: 'unreachable' }))
     }
   }, [token.decimals, userAddress])
 
